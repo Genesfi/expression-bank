@@ -11,6 +11,7 @@ export default function AdminDashboard() {
     // State untuk list data
     const [expressions, setExpressions] = useState<any[]>([]);
     const [editingId, setEditingId] = useState<number | null>(null);
+    const [searchTerm, setSearchTerm] = useState('');
 
     // State untuk form
     const [title, setTitle] = useState('');
@@ -181,7 +182,15 @@ export default function AdminDashboard() {
                         </div>
                     </form>
                 </div>
-
+                <div className="mb-4">
+                    <input
+                        type="text"
+                        placeholder="Cari di dashboard..."
+                        className="p-2 bg-[#1a1a1a] border border-gray-700 rounded text-sm w-full md:w-64 focus:border-blue-500 outline-none"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                </div>
                 {/* TABEL LIST DATA */}
                 <h2 className="text-xl font-bold text-white mb-6">Daftar Expression ({expressions.length})</h2>
                 <div className="bg-[#111111] border border-gray-800 rounded-2xl overflow-hidden shadow-lg">
@@ -196,21 +205,26 @@ export default function AdminDashboard() {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-800 text-sm">
-                                {expressions.map((item) => (
-                                    <tr key={item.id} className="hover:bg-[#151515] transition-colors">
-                                        <td className="p-4 font-medium text-white">{item.title}</td>
-                                        <td className="p-4"><span className="bg-gray-800 text-gray-300 px-2 py-1 rounded text-xs">{item.category}</span></td>
-                                        <td className="p-4 text-gray-500 truncate max-w-xs">{item.description}</td>
-                                        <td className="p-4 text-right">
-                                            <button onClick={() => handleEdit(item)} className="text-blue-400 hover:text-blue-300 font-semibold mr-4 transition">
-                                                Edit
-                                            </button>
-                                            <button onClick={() => handleDelete(item.id)} className="text-red-500 hover:text-red-400 font-semibold transition">
-                                                Hapus
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
+                                {expressions
+                                    .filter(item =>
+                                        item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                        item.code.toLowerCase().includes(searchTerm.toLowerCase())
+                                    )
+                                    .map((item) => (
+                                        <tr key={item.id} className="hover:bg-[#151515] transition-colors">
+                                            <td className="p-4 font-medium text-white">{item.title}</td>
+                                            <td className="p-4"><span className="bg-gray-800 text-gray-300 px-2 py-1 rounded text-xs">{item.category}</span></td>
+                                            <td className="p-4 text-gray-500 truncate max-w-xs">{item.description}</td>
+                                            <td className="p-4 text-right">
+                                                <button onClick={() => handleEdit(item)} className="text-blue-400 hover:text-blue-300 font-semibold mr-4 transition">
+                                                    Edit
+                                                </button>
+                                                <button onClick={() => handleDelete(item.id)} className="text-red-500 hover:text-red-400 font-semibold transition">
+                                                    Hapus
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
                                 {expressions.length === 0 && (
                                     <tr>
                                         <td colSpan={4} className="p-8 text-center text-gray-500">Belum ada data.</td>
