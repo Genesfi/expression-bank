@@ -16,10 +16,7 @@ export default function ExpressionList({ data }: { data: any[] }) {
         return ['All', ...uniqueCategories];
     }, [data]);
 
-    // Reset ke halaman 1 kalau filter berubah
-    useEffect(() => {
-        setCurrentPage(1);
-    }, [search, selectedCategory]);
+    
 
     // Logika Filter (Judul + Deskripsi + Isi Kode + Kategori)
     const filteredData = data.filter(item => {
@@ -53,7 +50,7 @@ export default function ExpressionList({ data }: { data: any[] }) {
                         placeholder="Cari expression (judul, fungsi, atau kodenya)..."
                         className="w-full p-4 px-6 pr-12 bg-[#141414] border border-gray-800 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all shadow-sm"
                         value={search}
-                        onChange={(e) => setSearch(e.target.value)}
+                        onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
                     />
                     {/* Tombol X (muncul kalau ada teks) */}
                     {search && (
@@ -71,7 +68,7 @@ export default function ExpressionList({ data }: { data: any[] }) {
                 <div className="md:w-64">
                     <select
                         value={selectedCategory}
-                        onChange={(e) => setSelectedCategory(e.target.value)}
+                        onChange={(e) => { setSelectedCategory(e.target.value); setCurrentPage(1); }}
                         className="w-full p-4 px-6 bg-[#141414] border border-gray-800 rounded-xl text-white focus:outline-none focus:border-blue-500 appearance-none cursor-pointer"
                     >
                         {categories.map(cat => (
@@ -83,8 +80,8 @@ export default function ExpressionList({ data }: { data: any[] }) {
 
             {/* GRID LIST */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {paginatedData.map(item => (
-                    <div key={item.id} className="flex flex-col p-6 border border-gray-800 rounded-2xl bg-[#111111] hover:border-gray-700 transition-colors shadow-lg">
+                {paginatedData.map((item, index) => (
+                    <div key={String(item.id) + index} className="flex flex-col p-6 border border-gray-800 rounded-2xl bg-[#111111] hover:border-gray-700 transition-colors shadow-lg">
                         <div className="flex justify-between items-start mb-4">
                             <div>
                                 <h3 className="font-bold text-xl text-white mb-2">{item.title}</h3>

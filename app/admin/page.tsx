@@ -33,13 +33,13 @@ export default function AdminDashboard() {
         checkUser();
     }, [router]);
 
-    const fetchExpressions = async () => {
+    async function fetchExpressions() {
         const { data, error } = await supabase
             .from('expressions')
             .select('*')
             .order('created_at', { ascending: false });
         if (!error && data) setExpressions(data);
-    };
+    }
 
     const handleLogout = async () => {
         await supabase.auth.signOut();
