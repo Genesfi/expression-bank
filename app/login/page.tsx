@@ -1,6 +1,5 @@
 "use client";
 import { useState } from 'react';
-import { supabase } from '../../utils/supabase';
 import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
@@ -13,16 +12,25 @@ export default function LoginPage() {
         e.preventDefault();
         setLoading(true);
 
-        const { error } = await supabase.auth.signInWithPassword({
-            email,
-            password,
-        });
+        try {
+            const res = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email, password }),
+            });
+            const data = await res.json();
 
-        if (error) {
-            alert('Gagal login: ' + error.message);
+            if (res.ok && data.success) {
+                router.push('/admin');
+            } else {
+                alert('Gagal login: ' + (data.error || 'Email atau password salah.'));
+                setLoading(false);
+            }
+        } catch {
+            alert('Gagal menghubungi server.');
             setLoading(false);
-        } else {
-            router.push('/admin'); // Kalau sukses, lempar ke dashboard
         }
     };
 

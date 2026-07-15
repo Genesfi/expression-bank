@@ -1,10 +1,10 @@
-import { supabase } from '../utils/supabase';
+import { supabaseServer } from '../utils/supabaseServer';
 import ExpressionList from '../components/ExpressionList';
 
 export const revalidate = 0;
 
 export default async function Home() {
-  const { data: expressions, error } = await supabase
+  const { data: expressions, error } = await supabaseServer
     .from('expressions')
     .select('*')
     .order('created_at', { ascending: false });

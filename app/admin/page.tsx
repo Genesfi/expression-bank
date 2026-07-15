@@ -1,6 +1,5 @@
 "use client";
 import { useState, useEffect } from 'react';
-import { supabase } from '../../utils/supabase';
 import { useRouter } from 'next/navigation';
 
 export default function AdminDashboard() {
@@ -22,27 +21,34 @@ export default function AdminDashboard() {
     // Cek Auth dan Ambil Data
     useEffect(() => {
         const checkUser = async () => {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (!session) {
+            try {
+                const res = await fetch('/api/auth/session');
+                const data = await res.json();
+                if (!data.session) {
+                    router.push('/login');
+                } else {
+                    setCheckingAuth(false);
+                    fetchExpressions(); // Panggil data kalau sudah login
+                }
+            } catch {
                 router.push('/login');
-            } else {
-                setCheckingAuth(false);
-                fetchExpressions(); // Panggil data kalau sudah login
             }
         };
         checkUser();
     }, [router]);
 
     async function fetchExpressions() {
-        const { data, error } = await supabase
-            .from('expressions')
-            .select('*')
-            .order('created_at', { ascending: false });
-        if (!error && data) setExpressions(data);
+        try {
+            const res = await fetch('/api/expressions');
+            const data = await res.json();
+            if (data.data) setExpressions(data.data);
+        } catch {}
     }
 
     const handleLogout = async () => {
-        await supabase.auth.signOut();
+        try {
+            await fetch('/api/auth/logout', { method: 'POST' });
+        } catch {}
         router.push('/');
     };
 
@@ -51,23 +57,32 @@ export default function AdminDashboard() {
         e.preventDefault();
         setLoading(true);
 
-        if (editingId) {
-            // Mode Update
-            const { error } = await supabase
-                .from('expressions')
-                .update({ title, category, description, code })
-                .eq('id', editingId);
+        try {
+            if (editingId) {
+                // Mode Update
+                const res = await fetch('/api/expressions', {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: editingId, title, category, description, code }),
+                });
+                const data = await res.json();
 
-            if (error) alert('Gagal update: ' + error.message);
-            else alert('Data berhasil diupdate!');
-        } else {
-            // Mode Insert
-            const { error } = await supabase
-                .from('expressions')
-                .insert([{ title, category, description, code }]);
+                if (res.ok) alert('Data berhasil diupdate!');
+                else alert('Gagal update: ' + (data.error || 'Terjadi kesalahan.'));
+            } else {
+                // Mode Insert
+                const res = await fetch('/api/expressions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title, category, description, code }),
+                });
+                const data = await res.json();
 
-            if (error) alert('Gagal menyimpan: ' + error.message);
-            else alert('Expression baru berhasil ditambah!');
+                if (res.ok) alert('Expression baru berhasil ditambah!');
+                else alert('Gagal menyimpan: ' + (data.error || 'Terjadi kesalahan.'));
+            }
+        } catch (err: any) {
+            alert('Terjadi kesalahan koneksi: ' + err.message);
         }
 
         resetForm();
@@ -89,9 +104,19 @@ export default function AdminDashboard() {
     const handleDelete = async (id: number) => {
         if (!confirm('Yakin mau hapus expression ini?')) return;
 
-        const { error } = await supabase.from('expressions').delete().eq('id', id);
-        if (error) alert('Gagal menghapus: ' + error.message);
-        else fetchExpressions(); // Refresh tabel setelah hapus
+        try {
+            const res = await fetch(`/api/expressions?id=${id}`, {
+                method: 'DELETE',
+            });
+            const data = await res.json();
+            if (res.ok) {
+                fetchExpressions(); // Refresh tabel setelah hapus
+            } else {
+                alert('Gagal menghapus: ' + (data.error || 'Terjadi kesalahan.'));
+            }
+        } catch (err: any) {
+            alert('Terjadi kesalahan koneksi: ' + err.message);
+        }
     };
 
     const resetForm = () => {
